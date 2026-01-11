@@ -24,17 +24,33 @@ function utils.getFilesInDirectory(path, pattern)
 	return files, fileCount
 end
 
-local frameworks = { 'es_extended', 'ND_Core', 'ox_core', 'qbx_core' }
+local convarFramework = GetConvar('doorlock:framework', ''):lower()
+
+local frameworks = {
+	{ resource = 'es_extended', module = 'es_extended' },
+	{ resource = 'ND_Core', module = 'nd_core' },
+	{ resource = 'ox_core', module = 'ox_core' },
+	{ resource = 'qbx_core', module = 'qbx_core' },
+	{ resource = 'qb-core', module = 'qbcore' },
+}
 local sucess = false
 
 for i = 1, #frameworks do
 	local framework = frameworks[i]
-	
-	if GetResourceState(framework):find('start') then
-		require(('server.framework.%s'):format(framework:lower()))
+	local resource = framework.resource
+	local module = framework.module
+
+	if convarFramework ~= '' and convarFramework ~= resource:lower() and convarFramework ~= module then
+		goto continue
+	end
+
+	if GetResourceState(resource):find('start') then
+		require(('server.framework.%s'):format(module:gsub('%-', '_')))
 		sucess = true
 		break
 	end
+
+	::continue::
 end
 
 if not sucess then
